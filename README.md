@@ -15,3 +15,11 @@ Here are some ideas to get you started:
 - ⚡ Fun fact: ...
 -->This is my first deploy!
 Test update works!.
+your-study-app/
+├── ai-templates/           (existing AI study templates)
+├── learnhub-templates/     (new LearnHub LMS templates)
+├── shared-components/
+├── services/
+│   ├── ai-service.js       (existing AI features)
+│   └── lms-service.js      (new LMS features)
+└── pages/
