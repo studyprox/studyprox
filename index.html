@@ -1,1 +1,89 @@
 <p>Welcome to StudyProx—your learning hub!</p>
+import OpenAI from 'openai';
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Only POST allowed' });
+  }
+
+  const { prompt } = req.body;
+  if (!prompt) {
+    return res.status(400).json({ error: 'Prompt required' });
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini', // Start with mini for free/fast testing; swap to 'gpt-4o' later
+      messages: [
+        { role: 'system', content: 'You are a helpful tutor for Indian students (CBSE/Boards/JEE/NEET). Keep responses simple, accurate, and aimed at 95% scores. Include steps for math.' },
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: 500, // Limit for cost/speed
+    });
+
+    const response = completion.choices[0]?.message?.content || 'No response generated.';
+    res.status(200).json({ response });
+  } catch (error) {
+    console.error('OpenAI Error:', error);
+    res.status(500).json({ error: 'AI service temporarily down—try again!' });
+  }
+}
+'use client'; // If Next.js 13+
+import { useState } from 'react';
+
+export default function AIChat() {
+  const [messages, setMessages] = useState<{ role: 'user' | 'ai'; content: string }[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || loading) return;
+
+    const userMsg = { role: 'user' as const, content: input };
+    setMessages(prev => [...prev, userMsg]);
+    setInput(''); setLoading(true);
+
+    try {
+      const res = await fetch('/api/ai-query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: input }),
+      });
+      const { response } = await res.json();
+      setMessages(prev => [...prev, { role: 'ai' as const, content: response }]);
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'ai' as const, content: 'Error connecting to AI—check console!' }]);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ maxWidth: '600px', margin: '20px auto', border: '1px solid #ccc', borderRadius: '8px', padding: '16px' }}>
+      <h2 style={{ textAlign: 'center' }}>StudyProx AI Tutor</h2>
+      <div style={{ height: '300px', overflowY: 'auto', border: '1px solid #eee', padding: '8px', marginBottom: '10px' }}>
+        {messages.map((msg, i) => (
+          <div key={i} style={{ margin: '8px 0', padding: '8px', background: msg.role === 'user' ? '#e3f2fd' : '#f5f5f5', borderRadius: '4px' }}>
+            <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong> {msg.content}
+          </div>
+        ))}
+        {loading && <div>AI thinking... (uses GPT-4o for accurate answers!)</div>}
+      </div>
+      <form onSubmit={handleSubmit} style={{ display: 'flex' }}>
+        <input
+          type="text"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="e.g., Generate 5 NEET MCQs on Biology or Solve ∫x² dx"
+          style={{ flex: 1, padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}
+          disabled={loading}
+        />
+        <button type="submit" disabled={loading} style={{ padding: '10px 16px', marginLeft: '8px', background: '#0070f3', color: 'white', border: 'none', borderRadius: '4px' }}>
+          {loading ? 'Sending...' : 'Ask AI'}
+        </button>
+      </form>
+    </div>
+  );
+}
