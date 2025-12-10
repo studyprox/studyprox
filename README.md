@@ -13,13 +13,29 @@ Here are some ideas to get you started:
 - 📫 How to reach me: ...
 - 😄 Pronouns: ...
 - ⚡ Fun fact: ...
--->This is my first deploy!
-Test update works!.
-your-study-app/
-├── ai-templates/           (existing AI study templates)
-├── learnhub-templates/     (new LearnHub LMS templates)
-├── shared-components/
-├── services/
-│   ├── ai-service.js       (existing AI features)
-│   └── lms-service.js      (new LMS features)
-└── pages/
+-
+// learnhub-templates/CourseDashboard.jsx
+import React from 'react';
+import { AIStudyAssistant } from '../ai-templates/AIComponents';
+
+const CourseDashboard = ({ courses, userProgress }) => {
+  return (
+    <div className="lms-dashboard">
+      <h2>My Learning Dashboard</h2>
+      
+      <div className="ai-assistant-section">
+        <AIStudyAssistant context="course-dashboard" />
+      </div>
+      
+      <div className="course-grid">
+        {courses.map(course => (
+          <CourseCard 
+            key={course.id}
+            course={course}
+            progress={userProgress[course.id]}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
