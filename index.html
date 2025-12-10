@@ -87,3 +87,176 @@ export default function AIChat() {
     </div>
   );
 }
+// learnhub-templates/InteractiveLesson.jsx
+const InteractiveLesson = ({ lesson, aiEnabled = true }) => {
+  return (
+    <div className="lesson-container">
+      <div className="lesson-content">
+        <h1>{lesson.title}</h1>
+        <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
+        
+        {/* AI Integration Points */}
+        {aiEnabled && (
+          <>
+            <AISummaryGenerator content={lesson.content} />
+            <QuizGenerator topic={lesson.topic} />
+            <AIFlashcardCreator content={lesson.content} />
+          </>
+        )}
+      </div>
+      
+      <div className="lms-sidebar">
+        <ProgressTracker />
+        <DiscussionForum lessonId={lesson.id} />
+        <RelatedResources />
+      </div>
+    </div>
+  );
+};
+  // learnhub-templates/SmartAssessment.jsx
+const SmartAssessment = ({ assessment }) => {
+  const [userAnswers, setUserAnswers] = useState({});
+  
+  return (
+    <div className="assessment-container">
+      <h2>{assessment.title}</h2>
+      
+      {/* LMS Assessment Structure */}
+      {assessment.questions.map((q, index) => (
+        <QuestionItem 
+          key={q.id}
+          question={q}
+          index={index}
+          onChange={(answer) => handleAnswer(q.id, answer)}
+        />
+      ))}
+      
+      {/* AI-Powered Features */}
+      <AITimeManagement questions={assessment.questions} />
+      <AIHintSystem questions={assessment.questions} />
+      <PerformanceAnalytics answers={userAnswers} />
+    </div>
+  );
+};
+   // services/IntegratedStudyService.js
+class IntegratedStudyService {
+  constructor() {
+    this.aiService = new AIService();
+    this.lmsService = new LMSService();
+  }
+  
+  async getPersonalizedLearningPath(userId) {
+    // Get LMS progress data
+    const lmsProgress = await this.lmsService.getUserProgress(userId);
+    
+    // Get AI recommendations
+    const aiRecommendations = await this.aiService.generateRecommendations(
+      lmsProgress,
+      userLearningStyle
+    );
+    
+    // Combine for hybrid learning path
+    return this.mergeLearningPaths(lmsProgress, aiRecommendations);
+  }
+  
+  async generateSmartFlashcards(courseId) {
+    // Get LMS course content
+    const courseContent = await this.lmsService.getCourseContent(courseId);
+    
+    // Use AI to generate flashcards
+    const flashcards = await this.aiService.generateFlashcards(courseContent);
+    
+    // Save to LMS
+    await this.lmsService.saveStudyMaterial(courseId, 'flashcards', flashcards);
+    
+    return flashcards;
+  }
+}
+  // pages/Dashboard.jsx
+const UnifiedDashboard = () => {
+  return (
+    <div className="unified-dashboard">
+      {/* LMS Side */}
+      <div className="lms-section">
+        <CourseProgress />
+        <UpcomingAssignments />
+        <GradeOverview />
+      </div>
+      
+      {/* AI Study Side */}
+      <div className="ai-section">
+        <StudyRecommendations />
+        <AIFlashcardReview />
+        <SmartStudyPlanner />
+      </div>
+      
+      {/* Combined Features */}
+      <div className="hybrid-section">
+        <AIPoweredCourseRecommendations />
+        <LearningAnalyticsDashboard />
+        <IntelligentReminders />
+      </div>
+    </div>
+  );
+};
+       -- Add LMS tables to existing schema
+CREATE TABLE courses (
+  id UUID PRIMARY KEY,
+  title VARCHAR(255),
+  description TEXT,
+  instructor_id UUID,
+  created_at TIMESTAMP
+);
+
+CREATE TABLE enrollments (
+  id UUID PRIMARY KEY,
+  user_id UUID,
+  course_id UUID,
+  progress FLOAT,
+  last_accessed TIMESTAMP
+);
+
+CREATE TABLE assignments (
+  id UUID PRIMARY KEY,
+  course_id UUID,
+  title VARCHAR(255),
+  due_date TIMESTAMP,
+  ai_generated BOOLEAN DEFAULT false
+);
+
+-- Link AI features with LMS content
+CREATE TABLE ai_study_sessions (
+  id UUID PRIMARY KEY,
+  user_id UUID,
+  course_id UUID,
+  content_type VARCHAR(50),
+  ai_metrics JSONB,
+  created_at TIMESTAMP
+);
+// api/integrated-routes.js
+router.get('/api/hybrid/learning-path/:userId', async (req, res) => {
+  const { userId } = req.params;
+  
+  // Get combined data
+  const lmsData = await getLMSUserData(userId);
+  const aiInsights = await getAILearningInsights(userId);
+  
+  // Generate hybrid response
+  const hybridPath = {
+    recommendedCourses: mergeRecommendations(
+      lmsData.enrolledCourses,
+      aiInsights.recommendedTopics
+    ),
+    studySchedule: generateSmartSchedule(
+      lmsData.assignments,
+      aiInsights.optimalStudyTimes
+    ),
+    resources: combineResources(
+      lmsData.courseMaterials,
+      aiInsights.generatedContent
+    )
+  };
+  
+  res.json(hybridPath);
+});
+          
